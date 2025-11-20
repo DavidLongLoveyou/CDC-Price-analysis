@@ -1,3 +1,4 @@
+
 import type { AnalysisResult, HistogramData, ModalInfo } from '../types';
 
 function parseInput(text: string): number[] {
@@ -5,21 +6,55 @@ function parseInput(text: string): number[] {
     throw new Error('Dữ liệu đầu vào trống. Vui lòng cung cấp các số liệu.');
   }
   
-  const numbers = text
-    .split(/[\s,]+/) // Split by spaces or commas
-    .filter(Boolean) // Remove empty strings
-    .map(s => {
-      const cleanedString = s.replace(/,/g, '');
-      // If the string contains a dot and the part after the last dot is NOT 3 characters long,
-      // it's treated as a decimal. All other dots are removed.
-      if (cleanedString.includes('.') && cleanedString.substring(cleanedString.lastIndexOf('.') + 1).length !== 3) {
-          const lastDotIndex = cleanedString.lastIndexOf('.');
-          const integerPart = cleanedString.substring(0, lastDotIndex).replace(/\./g, '');
-          const decimalPart = cleanedString.substring(lastDotIndex + 1);
-          return Number(`${integerPart}.${decimalPart}`);
+  // Bước 1: Chuẩn hóa các dấu phân cách
+  // Thay thế xuống dòng, Tab, hoặc dấu phẩy đi kèm khoảng trắng thành một dấu phân cách chung (Space)
+  // Lưu ý: Không thay thế dấu phẩy nằm giữa các con số (ví dụ: 3,5 hoặc 3.729,98)
+  const cleanedText = text
+    .replace(/[\n\r\t]+/g, ' ') // Xuống dòng, Tab -> Space
+    .replace(/,\s+/g, ' ');     // Phẩy + Space (vd: "100, 200") -> Space
+
+  // Bước 2: Tách thành các token
+  const tokens = cleanedText.split(/\s+/).filter(t => t.trim() !== '');
+
+  const numbers = tokens.map(token => {
+      let val = token.trim();
+      
+      // Xử lý các trường hợp định dạng số
+      
+      // Trường hợp 1: Chứa cả dấu chấm và dấu phẩy (VD: 3.729,98 hoặc 1.000.000,50)
+      // Định dạng Việt Nam/Châu Âu: Dấu chấm là phân cách hàng nghìn, Dấu phẩy là thập phân
+      if (val.includes('.') && val.includes(',')) {
+          // Kiểm tra vị trí: Nếu dấu chấm đứng trước dấu phẩy (3.xxx,xx) -> VN Format
+          const lastDotIndex = val.lastIndexOf('.');
+          const lastCommaIndex = val.lastIndexOf(',');
+
+          if (lastDotIndex < lastCommaIndex) {
+              // Xóa hết dấu chấm (hàng nghìn), thay dấu phẩy bằng dấu chấm (thập phân JS)
+              val = val.replace(/\./g, '').replace(/,/g, '.');
+          } else {
+              // Trường hợp hiếm: 1,000.50 (US Format)
+              val = val.replace(/,/g, '');
+          }
+      } 
+      // Trường hợp 2: Chỉ chứa dấu phẩy (VD: 5,5 hoặc 10,500)
+      else if (val.includes(',')) {
+          // Trong ngữ cảnh này (đấu thầu VN), ta ưu tiên dấu phẩy là thập phân
+          val = val.replace(/,/g, '.');
       }
-      // Otherwise, all dots are treated as thousand separators.
-      return Number(cleanedString.replace(/\./g, ''));
+      // Trường hợp 3: Chỉ chứa dấu chấm (VD: 5.700 hoặc 10.5)
+      else if (val.includes('.')) {
+           const parts = val.split('.');
+           const lastPart = parts[parts.length - 1];
+           
+           // Heuristic: Nếu phần sau dấu chấm đúng 3 ký tự (VD: 5.700), 
+           // khả năng cao là phân cách hàng nghìn -> Xóa dấu chấm
+           // Ngược lại (VD: 10.5), giữ nguyên là thập phân
+           if (lastPart.length === 3) {
+               val = val.replace(/\./g, '');
+           }
+      }
+
+      return Number(val);
     })
     .filter(n => !isNaN(n) && isFinite(n));
 
