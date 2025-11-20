@@ -1,0 +1,5 @@
+{
+  "name": "Chuyên gia Phân tích Dữ liệu",
+  "description": "Một công cụ chuyên nghiệp để tổng hợp và phân tích dữ liệu số. Nhập một chuỗi số, và ứng dụng sẽ cung cấp các chỉ số thống kê quan trọng như giá trị nhỏ nhất, lớn nhất, số lượng, trung bình, mode, và biểu đồ phân phối tần suất.",
+  "requestFramePermissions": []
+}
