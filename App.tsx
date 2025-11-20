@@ -184,7 +184,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
             </h1>
           </div>
           <p className="mt-2 text-lg text-slate-400 max-w-2xl mx-auto">
-            Nhập số liệu thầu/giá để tìm ra mức giá hợp lý nhất.
+            Nhập số liệu thầu/giá để tìm ra mức giá hợp lý nhất. (Contact: PhanHuy)
           </p>
         </header>
 
