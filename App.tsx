@@ -1,12 +1,15 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { analyzeData } from './services/analysisService';
+import { findProductSynonyms } from './services/geminiService';
 import type { AnalysisResult, ModalInfo } from './types';
 import StatCard from './components/StatCard';
 import HistogramChart from './components/HistogramChart';
 import GuideModal from './components/GuideModal';
 import RecommendationSection from './components/RecommendationSection';
-import { ChartIcon, SigmaIcon, HashIcon, UpDownIcon, TrendingUpIcon, AlertIcon, DownloadIcon, QuestionMarkCircleIcon, DocumentArrowDownIcon } from './components/Icons';
+import SettingsModal from './components/SettingsModal';
+import { verifyAccess } from './utils/crypto';
+import { ChartIcon, SigmaIcon, HashIcon, UpDownIcon, TrendingUpIcon, AlertIcon, DownloadIcon, QuestionMarkCircleIcon, DocumentArrowDownIcon, SparklesIcon, Cog6ToothIcon } from './components/Icons';
 
 const App: React.FC = () => {
   const [inputText, setInputText] = useState<string>('110, 125, 125, 130, 145, 150, 160, 160, 175, 180, 190, 205, 210, 210, 225, 230, 240, 250, 250, 250, 265, 270, 280, 290, 300');
@@ -15,6 +18,25 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+  // Security & Settings State
+  const [accessPassword, setAccessPassword] = useState<string>(() => localStorage.getItem('data_analyst_pass') || '');
+  const [userApiKey, setUserApiKey] = useState<string>(() => localStorage.getItem('data_analyst_key') || '');
+
+  // AI Search States
+  const [productSearchTerm, setProductSearchTerm] = useState<string>('');
+  const [synonymResults, setSynonymResults] = useState<string[]>([]);
+  const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('data_analyst_pass', accessPassword);
+  }, [accessPassword]);
+
+  useEffect(() => {
+    localStorage.setItem('data_analyst_key', userApiKey);
+  }, [userApiKey]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -60,6 +82,41 @@ const App: React.FC = () => {
     }, 500);
   }, [inputText]);
   
+  const handleAiSearch = async () => {
+      if (!productSearchTerm.trim()) return;
+      
+      setIsAiLoading(true);
+      setAiError(null);
+      setSynonymResults([]);
+
+      // Determine which key to use
+      // 1. Check if accessPassword unlocks the internal key
+      const internalKey = verifyAccess(accessPassword);
+      // 2. If unlocked, use internal key. Otherwise use user provided key.
+      const effectiveKey = internalKey || userApiKey;
+
+      if (!effectiveKey) {
+          setAiError('Vui lòng nhập Mật khẩu truy cập hoặc API Key trong mục Cài đặt (Bánh răng).');
+          return;
+      }
+
+      try {
+          const synonyms = await findProductSynonyms(productSearchTerm, effectiveKey);
+          setSynonymResults(synonyms);
+          if (synonyms.length === 0) {
+              setAiError('Không tìm thấy kết quả tương tự nào.');
+          }
+      } catch (e) {
+          if (e instanceof Error) {
+              setAiError(e.message);
+          } else {
+              setAiError('Lỗi kết nối với AI.');
+          }
+      } finally {
+          setIsAiLoading(false);
+      }
+  };
+
   const formatModeValue = (mode: ModalInfo[]): string => {
     if (!mode || mode.length === 0) {
         return 'N/A';
@@ -135,17 +192,33 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
       <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        accessPassword={accessPassword}
+        setAccessPassword={setAccessPassword}
+        userApiKey={userApiKey}
+        setUserApiKey={setUserApiKey}
+      />
       
       <div className="max-w-7xl mx-auto">
         
-        {/* Header Bar with Help Button */}
-        <div className="flex justify-end mb-4">
+        {/* Header Bar with Help and Settings Button */}
+        <div className="flex justify-end mb-4 gap-3">
           <button
             onClick={() => setIsGuideOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold"
           >
             <QuestionMarkCircleIcon className="w-5 h-5" />
-            Hướng dẫn & Mẹo
+            Hướng dẫn
+          </button>
+          
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold"
+            title="Cấu hình API"
+          >
+            <Cog6ToothIcon className="w-5 h-5" />
           </button>
         </div>
 
@@ -189,6 +262,76 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
         </header>
 
         <main>
+          {/* Gemini AI Synonym Search Section */}
+          <div className="bg-indigo-950/30 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-indigo-800/50 mb-8 relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+             
+             <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-indigo-200 flex items-center gap-2">
+                        <SparklesIcon className="w-6 h-6 text-indigo-400" />
+                        Tra cứu tên tương đương (AI)
+                    </h3>
+                    <p className="text-indigo-200/70 mt-1 text-sm">Nhập tên thuốc/vật tư để AI tìm các tên gọi khác thường dùng trong thầu.</p>
+                  </div>
+                  
+                  {/* Quick status indicator */}
+                  <div className="text-xs px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-900/30 text-indigo-300">
+                    {verifyAccess(accessPassword) ? "Đã mở khóa Pro" : (userApiKey ? "Dùng Key cá nhân" : "Chưa cấu hình")}
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-grow">
+                        <input 
+                            type="text"
+                            value={productSearchTerm}
+                            onChange={(e) => setProductSearchTerm(e.target.value)}
+                            placeholder="Ví dụ: Que thử đường huyết..."
+                            className="w-full p-3 bg-slate-900/80 border border-indigo-700/50 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                            onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
+                        />
+                    </div>
+                    <button 
+                        onClick={handleAiSearch}
+                        disabled={isAiLoading || !productSearchTerm.trim()}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                        {isAiLoading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <SparklesIcon className="w-5 h-5" />
+                        )}
+                        Tìm kiếm AI
+                    </button>
+                </div>
+
+                {/* AI Results Area */}
+                {aiError && (
+                    <div className="mt-4 text-red-400 text-sm bg-red-900/20 p-3 rounded-lg border border-red-900/50 flex items-center gap-2">
+                        <AlertIcon className="w-5 h-5 flex-shrink-0" />
+                        <span>{aiError}</span>
+                    </div>
+                )}
+
+                {synonymResults.length > 0 && (
+                    <div className="mt-6 animate-fade-in">
+                        <p className="text-sm font-semibold text-indigo-300 mb-3 uppercase tracking-wider">Các tên gọi tương tự tìm thấy:</p>
+                        <div className="flex flex-wrap gap-2">
+                            {synonymResults.map((item, index) => (
+                                <div key={index} className="bg-indigo-900/50 hover:bg-indigo-800/70 border border-indigo-700/50 text-indigo-100 px-4 py-2 rounded-lg transition-colors select-all cursor-pointer" title="Click để chọn văn bản">
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+             </div>
+          </div>
+
+
+          {/* Main Analysis Section */}
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-slate-700">
             <div className="flex flex-col gap-4">
               <div className="flex justify-between items-end">
