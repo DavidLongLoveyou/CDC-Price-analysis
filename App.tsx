@@ -5,6 +5,7 @@ import type { AnalysisResult, ModalInfo } from './types';
 import StatCard from './components/StatCard';
 import HistogramChart from './components/HistogramChart';
 import GuideModal from './components/GuideModal';
+import RecommendationSection from './components/RecommendationSection';
 import { ChartIcon, SigmaIcon, HashIcon, UpDownIcon, TrendingUpIcon, AlertIcon, DownloadIcon, QuestionMarkCircleIcon, DocumentArrowDownIcon } from './components/Icons';
 
 const App: React.FC = () => {
@@ -86,30 +87,44 @@ const App: React.FC = () => {
     const modeText = formatModeValue(analysisResult.mode);
     const today = new Date().toLocaleString('vi-VN');
 
+    // Recommendation Text Logic
+    let recommendation = "";
+    const hasMode = analysisResult.mode.length > 0 && !isNaN(analysisResult.mode[0].average);
+    
+    if (hasMode) {
+        const ranges = analysisResult.mode.map(m => m.range).join(' hoặc ');
+        recommendation = `ĐỀ XUẤT GIÁ THẦU HỢP LÝ:\n- Khoảng giá tối ưu: ${ranges}\n- Lý do: Đây là khoảng giá xuất hiện nhiều nhất trong dữ liệu (Giá thị trường phổ biến).`;
+    } else {
+        recommendation = `ĐỀ XUẤT GIÁ THẦU HỢP LÝ:\n- Giá trị tham khảo: Khoảng ${analysisResult.mean.toFixed(2)}\n- Lý do: Dữ liệu phân tán đều, nên sử dụng giá trị trung bình.`;
+    }
+
     const reportContent = `
 BÁO CÁO PHÂN TÍCH DỮ LIỆU
 Ngày tạo: ${today}
 ----------------------------------------
 
-KẾT QUẢ TỔNG HỢP:
+${recommendation}
+
+----------------------------------------
+CHI TIẾT KẾT QUẢ TỔNG HỢP:
 - Tổng số lượng mẫu: ${analysisResult.count}
 - Giá trị nhỏ nhất: ${analysisResult.min.toLocaleString()}
 - Giá trị lớn nhất: ${analysisResult.max.toLocaleString()}
 - Giá trị trung bình: ${analysisResult.mean.toFixed(2)}
 - Giá trị phổ biến (Mode): ${modeText}
 
-CHI TIẾT PHÂN PHỐI TẦN SUẤT:
+PHÂN PHỐI TẦN SUẤT:
 ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`).join('\n')}
 
 ----------------------------------------
-Được tạo bởi Chuyên gia Phân tích Dữ liệu
+Được tạo bởi Chuyên gia Phân tích Dữ liệu (Contact: PhanHuy)
     `.trim();
 
     const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Bao_cao_phan_tich_${Date.now()}.txt`;
+    link.download = `Bao_cao_Gia_thau_${Date.now()}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -130,7 +145,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold"
           >
             <QuestionMarkCircleIcon className="w-5 h-5" />
-            Hướng dẫn cài đặt & Sử dụng
+            Hướng dẫn & Mẹo
           </button>
         </div>
 
@@ -169,7 +184,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
             </h1>
           </div>
           <p className="mt-2 text-lg text-slate-400 max-w-2xl mx-auto">
-            Công cụ chuyên nghiệp, hoạt động độc lập. Nhập số liệu để nhận báo cáo ngay lập tức.
+            Nhập số liệu thầu/giá để tìm ra mức giá hợp lý nhất.
           </p>
         </header>
 
@@ -179,7 +194,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
               <div className="flex justify-between items-end">
                 <label htmlFor="data-input" className="text-lg font-bold text-white flex items-center gap-2">
                   <div className="w-1 h-6 bg-cyan-500 rounded-full"></div>
-                  Nhập dữ liệu của bạn
+                  Nhập dữ liệu (Giá/Số lượng)
                 </label>
                 <button 
                   onClick={() => setInputText('')}
@@ -193,14 +208,14 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
                 id="data-input"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Ví dụ: 10, 25, 15, 30..."
+                placeholder="Ví dụ: 1000000, 1200000, 1500000..."
                 rows={6}
                 className="w-full p-4 bg-slate-900/80 border border-slate-600 rounded-xl text-slate-200 text-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 resize-y font-mono shadow-inner"
               />
               
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
                 <p className="text-sm text-slate-500 italic hidden sm:block">
-                  * Hỗ trợ copy từ Excel, Word hoặc nhập tay.
+                  * Hỗ trợ copy từ Excel hoặc nhập tay.
                 </p>
                 <button
                   onClick={handleAnalyze}
@@ -250,7 +265,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
                   Lưu báo cáo về máy
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
                 <StatCard title="Tổng số lượng" value={analysisResult.count} icon={<HashIcon />} />
                 <StatCard title="Giá trị nhỏ nhất" value={analysisResult.min.toLocaleString()} icon={<UpDownIcon orientation="down" />} />
@@ -258,6 +273,9 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
                 <StatCard title="Giá trị trung bình" value={analysisResult.mean.toFixed(2)} icon={<SigmaIcon />} />
                 <StatCard title="Phổ biến nhất (Mode)" value={formatModeValue(analysisResult.mode)} icon={<TrendingUpIcon />} />
               </div>
+
+              {/* Recommendation Section - Highlighting Best Bid */}
+              <RecommendationSection result={analysisResult} />
 
               <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-slate-700">
                  <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">

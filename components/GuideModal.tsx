@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { XMarkIcon, ComputerDesktopIcon, ChartIcon, DownloadIcon } from './Icons';
 
 interface GuideModalProps {
@@ -8,8 +8,6 @@ interface GuideModalProps {
 }
 
 const GuideModal: React.FC<GuideModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'install' | 'usage'>('install');
-
   if (!isOpen) return null;
 
   return (
@@ -29,93 +27,35 @@ const GuideModal: React.FC<GuideModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-700">
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-bold text-center transition-colors ${activeTab === 'install' ? 'bg-cyan-900/30 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-            onClick={() => setActiveTab('install')}
-          >
-            1. Cài đặt vào máy
-          </button>
-          <button
-            className={`flex-1 py-3 px-4 text-sm font-bold text-center transition-colors ${activeTab === 'usage' ? 'bg-cyan-900/30 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-            onClick={() => setActiveTab('usage')}
-          >
-            2. Cách sử dụng
-          </button>
-        </div>
-
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 text-slate-300 space-y-4">
-          {activeTab === 'install' ? (
-            <div className="space-y-6">
-              <div className="bg-cyan-900/20 p-4 rounded-lg border border-cyan-800/50">
-                <h4 className="font-bold text-cyan-200 mb-2 flex items-center gap-2">
-                   <ComputerDesktopIcon className="w-5 h-5" />
-                   Dùng riêng biệt, không cần vào web?
-                </h4>
-                <p className="text-sm mb-2">
-                  Hoàn toàn được! Công nghệ này hoạt động giống như bạn tải Zalo hay Chrome về máy.
-                </p>
-                <ul className="list-disc pl-5 text-sm space-y-1">
-                    <li>Bạn chỉ cần vào link này <strong>1 lần duy nhất</strong> để cài đặt.</li>
-                    <li>Sau khi cài, một biểu tượng (Icon) sẽ xuất hiện trên màn hình Desktop của bạn.</li>
-                    <li>Từ lần sau, bạn mở nó từ Desktop. Nó sẽ chạy trong cửa sổ riêng (giống phần mềm), không còn thanh địa chỉ web và <strong>không cần mạng Internet</strong>.</li>
-                </ul>
-              </div>
+        <div className="p-6 overflow-y-auto flex-1 text-slate-300 space-y-6">
+            <div className="space-y-4">
+            <h4 className="font-bold text-white text-lg">1. Cách nhập số liệu</h4>
+            <p>Bạn có thể nhập dãy số theo bất kỳ cách nào bạn muốn, phần mềm đủ thông minh để hiểu:</p>
+            
+            <ul className="list-disc pl-5 space-y-2 text-slate-300">
+                <li><span className="text-cyan-400">Copy từ Excel/Word:</span> Chỉ cần Copy và Dán (Paste) vào ô nhập.</li>
+                <li><span className="text-cyan-400">Nhập tay:</span> Nhập các số cách nhau bằng dấu phẩy (10, 20) hoặc dấu cách.</li>
+                <li><span className="text-cyan-400">Số thập phân:</span> Dùng dấu chấm (ví dụ: 10.5).</li>
+            </ul>
 
-              <div className="space-y-4">
-                <h4 className="font-bold text-white">Các bước cài ra Desktop:</h4>
-                
-                <div className="flex gap-4 items-start">
-                  <div className="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white">1</div>
-                  <div>
-                    <p className="mb-2">Tìm nút <strong>"Cài đặt ngay"</strong> màu trắng ở trang chính và bấm vào.</p>
-                    <p className="text-sm text-slate-400 italic">Nếu không thấy nút đó, hãy làm theo bước 2.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 items-start">
-                  <div className="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white">2</div>
-                  <div>
-                    <p className="mb-2">Nhìn lên góc trên cùng bên phải của trình duyệt, bấm vào biểu tượng máy tính <DownloadIcon className="w-4 h-4 inline"/> hoặc dấu 3 chấm.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 items-start">
-                  <div className="bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white">3</div>
-                  <div>
-                    <p>Chọn dòng chữ <strong>"Cài đặt Chuyên gia Phân tích..."</strong> hoặc <strong>"Install App"</strong>.</p>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-slate-900 p-4 rounded border border-slate-700 font-mono text-sm text-slate-400 mt-2">
+                Ví dụ hợp lệ:<br/>
+                150<br/>
+                200, 300<br/>
+                5.5 10.2
             </div>
-          ) : (
-            <div className="space-y-6">
-               <div className="space-y-4">
-                <h4 className="font-bold text-white text-lg">Cách nhập số liệu</h4>
-                <p>Bạn có thể nhập dãy số theo bất kỳ cách nào bạn muốn, phần mềm đủ thông minh để hiểu:</p>
-                
-                <ul className="list-disc pl-5 space-y-2 text-slate-300">
-                  <li><span className="text-cyan-400">Cách 1:</span> Copy từ Excel và dán vào.</li>
-                  <li><span className="text-cyan-400">Cách 2:</span> Nhập các số cách nhau bằng dấu phẩy (ví dụ: 10, 20, 30).</li>
-                  <li><span className="text-cyan-400">Cách 3:</span> Nhập mỗi số một dòng.</li>
-                </ul>
-
-                <div className="bg-slate-900 p-4 rounded border border-slate-700 font-mono text-sm text-slate-400 mt-2">
-                  Ví dụ hợp lệ:<br/>
-                  150<br/>
-                  200, 300<br/>
-                  5.5 10.2
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                 <h4 className="font-bold text-white text-lg">Xuất báo cáo</h4>
-                 <p>Sau khi có kết quả, bạn có thể bấm nút <strong>"Lưu báo cáo"</strong> để tải về máy một file văn bản chứa toàn bộ kết quả thống kê, giúp bạn dễ dàng lưu trữ hoặc gửi email.</p>
-              </div>
             </div>
-          )}
+
+            <div className="space-y-2">
+                <h4 className="font-bold text-white text-lg">2. Đề xuất giá thầu</h4>
+                <p>Sau khi phân tích, phần mềm sẽ tự động tính toán và gợi ý cho bạn một <strong>"Khoảng giá hợp lý"</strong>. Đây là mức giá xuất hiện nhiều nhất trong dữ liệu quá khứ, giúp bạn đưa ra quyết định an toàn.</p>
+            </div>
+
+            <div className="space-y-2">
+                <h4 className="font-bold text-white text-lg">3. Xuất báo cáo</h4>
+                <p>Bấm nút <strong>"Lưu báo cáo về máy"</strong> để tải về file kết quả chi tiết.</p>
+            </div>
         </div>
 
         {/* Footer */}
