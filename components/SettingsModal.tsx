@@ -65,7 +65,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 type={showPassword ? "text" : "password"}
                 value={localPass}
                 onChange={(e) => setLocalPass(e.target.value)}
-                placeholder="Nhập pass để dùng Key nội bộ..."
+                placeholder="Nhập mã bảo mật..."
                 className="w-full p-3 pr-10 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
               <button
@@ -77,7 +77,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              Nếu nhập đúng mã (mpi.huy), phần mềm sẽ dùng key tích hợp sẵn.
+              Nếu có mã nội bộ, hãy nhập vào đây để kích hoạt tính năng AI.
             </p>
           </div>
 
@@ -97,7 +97,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 type={showKey ? "text" : "password"}
                 value={localKey}
                 onChange={(e) => setLocalKey(e.target.value)}
-                placeholder="Nhập API Key của bạn nếu không có pass..."
+                placeholder="Nhập API Key của bạn nếu không có mã..."
                 className="w-full p-3 pr-10 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
               <button
