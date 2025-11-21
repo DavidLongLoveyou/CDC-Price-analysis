@@ -3,6 +3,9 @@
 // Base64 của "mpi.huy" là "bXBpLmh1eQ=="
 const _h = "bXBpLmh1eQ==";
 
+// Constant để báo hiệu cho Service biết là dùng Proxy Server
+export const PROXY_MODE_SIGNAL = "USE_SERVER_PROXY";
+
 export const verifyAccess = (inputPass: string): string | null => {
     if (!inputPass) return null;
     
@@ -14,23 +17,10 @@ export const verifyAccess = (inputPass: string): string | null => {
         const check = btoa(cleanPass);
         
         if (check === _h) {
-            // Khi deploy lên Vercel với Vite, biến môi trường nằm trong import.meta.env
-            // và BẮT BUỘC phải có prefix VITE_ (như bạn đã cấu hình: VITE_GOOGLE_API_KEY)
-            
-            // @ts-ignore
-            const viteKey = import.meta.env.VITE_GOOGLE_API_KEY;
-            
-            // Ưu tiên lấy key từ Vite Env
-            if (viteKey) {
-                return viteKey;
-            }
-
-            // Fallback an toàn cho các môi trường khác (nếu có)
-            if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-                return process.env.API_KEY;
-            }
-            
-            return null;
+            // Nếu pass đúng, ta trả về tín hiệu đặc biệt.
+            // Frontend KHÔNG CẦN BIẾT Key là gì.
+            // Frontend sẽ dùng tín hiệu này để gọi vào api/gemini.js
+            return PROXY_MODE_SIGNAL;
         }
     } catch (e) {
         return null;
