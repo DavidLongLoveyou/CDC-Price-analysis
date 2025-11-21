@@ -1,25 +1,39 @@
 
-// Mật khẩu hash target (mpi.huy)
-// Base64 của "mpi.huy" là "bXBpLmh1eQ=="
-const _h = "bXBpLmh1eQ==";
-
 // Constant để báo hiệu cho Service biết là dùng Proxy Server
+// Khi trả về giá trị này, App sẽ gọi api/gemini.js thay vì gọi trực tiếp Google
 export const PROXY_MODE_SIGNAL = "USE_SERVER_PROXY";
+
+// Hàm Rot13 đơn giản để làm rối mã (Obfuscation)
+// Biến đổi ký tự: a->n, b->o, ...
+const rot13 = (str: string) => {
+  return str.replace(/[a-zA-Z]/g, (c) => {
+    const base = c <= 'Z' ? 65 : 97;
+    return String.fromCharCode(base + (c.charCodeAt(0) - base + 13) % 26);
+  });
+};
+
+// Target Hash của "mpi.huy" sau khi qua Rot13 và Base64
+// Quy trình mã hóa: "mpi.huy" -> (Rot13) -> "zcv.uhl" -> (Base64) -> "emN2LnVobA=="
+// Việc này giúp che giấu mật khẩu gốc khỏi việc bị dịch ngược đơn giản qua F12.
+const _target = "emN2LnVobA==";
 
 export const verifyAccess = (inputPass: string): string | null => {
     if (!inputPass) return null;
     
-    // Quan trọng: Xóa khoảng trắng thừa khi user copy paste
+    // Xóa khoảng trắng thừa
     const cleanPass = inputPass.trim();
 
-    // Encode pass nhập vào sang base64 để so sánh
     try {
-        const check = btoa(cleanPass);
+        // Bước 1: Rot13 (Đảo chữ để che giấu nội dung)
+        const rotated = rot13(cleanPass);
+        // Bước 2: Base64 encode
+        const encoded = btoa(rotated);
         
-        if (check === _h) {
-            // Nếu pass đúng, ta trả về tín hiệu đặc biệt.
-            // Frontend KHÔNG CẦN BIẾT Key là gì.
-            // Frontend sẽ dùng tín hiệu này để gọi vào api/gemini.js
+        // So sánh với chuỗi mục tiêu đã mã hóa
+        if (encoded === _target) {
+            // Pass đúng -> Trả về tín hiệu Proxy
+            // TUYỆT ĐỐI KHÔNG trả về API Key hay truy cập import.meta.env ở đây
+            // để đảm bảo Key không bao giờ lọt vào client bundle.
             return PROXY_MODE_SIGNAL;
         }
     } catch (e) {
