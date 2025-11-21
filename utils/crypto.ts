@@ -14,9 +14,23 @@ export const verifyAccess = (inputPass: string): string | null => {
         const check = btoa(cleanPass);
         
         if (check === _h) {
-            // Nếu Hash khớp với "mpi.huy"
-            // Return API Key from process.env as per guidelines
-            return process.env.API_KEY || null;
+            // Khi deploy lên Vercel với Vite, biến môi trường nằm trong import.meta.env
+            // và BẮT BUỘC phải có prefix VITE_ (như bạn đã cấu hình: VITE_GOOGLE_API_KEY)
+            
+            // @ts-ignore
+            const viteKey = import.meta.env.VITE_GOOGLE_API_KEY;
+            
+            // Ưu tiên lấy key từ Vite Env
+            if (viteKey) {
+                return viteKey;
+            }
+
+            // Fallback an toàn cho các môi trường khác (nếu có)
+            if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+                return process.env.API_KEY;
+            }
+            
+            return null;
         }
     } catch (e) {
         return null;
