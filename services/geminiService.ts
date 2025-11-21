@@ -2,9 +2,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Gemini AI dynamically
-export const findProductSynonyms = async (productName: string): Promise<string[]> => {
-  // The API key must be obtained exclusively from the environment variable process.env.API_KEY
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Accepts an apiKey argument which can be either the user's personal key or the system key
+export const findProductSynonyms = async (productName: string, apiKey: string): Promise<string[]> => {
+  if (!apiKey) {
+      throw new Error("Thiếu API Key. Vui lòng cấu hình trong phần Cài đặt.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   if (!productName.trim()) return [];
 
@@ -46,7 +50,7 @@ export const findProductSynonyms = async (productName: string): Promise<string[]
     
     // Xử lý các mã lỗi cụ thể để báo cho người dùng dễ hiểu
     if (error.toString().includes("403") || (error.error && error.error.code === 403)) {
-         throw new Error("API Key không hợp lệ hoặc đã bị Google chặn (Lỗi 403). Vui lòng liên hệ quản trị viên.");
+         throw new Error("API Key không hợp lệ hoặc đã bị chặn. Vui lòng kiểm tra lại Key của bạn.");
     }
     
     if (error.toString().includes("429")) {

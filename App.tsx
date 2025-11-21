@@ -21,7 +21,9 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   // Security & Settings State
-  const [accessPassword, setAccessPassword] = useState<string>(() => localStorage.getItem('data_analyst_pass') || '');
+  // Mặc định là rỗng, không lưu vào localStorage để đảm bảo F5 là mất (Reset session)
+  const [accessPassword, setAccessPassword] = useState<string>('');
+  const [userApiKey, setUserApiKey] = useState<string>('');
 
   // AI Search States
   const [productSearchTerm, setProductSearchTerm] = useState<string>('');
@@ -29,9 +31,12 @@ const App: React.FC = () => {
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // Clear cache & storage on mount (F5 reset)
   useEffect(() => {
-    localStorage.setItem('data_analyst_pass', accessPassword);
-  }, [accessPassword]);
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("Session reset.");
+  }, []);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -84,17 +89,29 @@ const App: React.FC = () => {
       setAiError(null);
       setSynonymResults([]);
 
-      // Check if accessPassword unlocks the feature
-      const isUnlocked = verifyAccess(accessPassword);
+      // Logic xác thực Key:
+      // 1. Ưu tiên dùng User API Key nếu có nhập
+      // 2. Nếu không, dùng System Key (qua Password)
+      let activeKey = '';
 
-      if (!isUnlocked) {
-          setAiError('Vui lòng nhập Mật khẩu truy cập trong mục Cài đặt (Bánh răng) để sử dụng tính năng AI.');
+      if (userApiKey && userApiKey.trim().length > 10) {
+          activeKey = userApiKey.trim();
+      } else {
+          // Kiểm tra pass
+          const systemKey = verifyAccess(accessPassword);
+          if (systemKey) {
+              activeKey = systemKey;
+          }
+      }
+
+      if (!activeKey) {
+          setAiError('Yêu cầu xác thực: Vui lòng nhập "Mã truy cập đặc biệt" HOẶC "API Key cá nhân" trong phần Cài đặt (Bánh răng).');
           setIsAiLoading(false);
           return;
       }
 
       try {
-          const synonyms = await findProductSynonyms(productSearchTerm);
+          const synonyms = await findProductSynonyms(productSearchTerm, activeKey);
           setSynonymResults(synonyms);
           if (synonyms.length === 0) {
               setAiError('Không tìm thấy kết quả tương tự nào.');
@@ -190,6 +207,8 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
         onClose={() => setIsSettingsOpen(false)}
         accessPassword={accessPassword}
         setAccessPassword={setAccessPassword}
+        userApiKey={userApiKey}
+        setUserApiKey={setUserApiKey}
       />
       
       <div className="max-w-7xl mx-auto">
@@ -206,10 +225,13 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
           
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold relative"
             title="Cấu hình"
           >
             <Cog6ToothIcon className="w-5 h-5" />
+            {(accessPassword || userApiKey) && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-green-500 rounded-full border border-slate-900"></span>
+            )}
           </button>
         </div>
 
@@ -268,8 +290,12 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
                   </div>
                   
                   {/* Quick status indicator */}
-                  <div className="text-xs px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-900/30 text-indigo-300">
-                    {verifyAccess(accessPassword) ? "Đã mở khóa Pro" : "Chưa kích hoạt"}
+                  <div className={`text-xs px-3 py-1 rounded-full border ${
+                      (userApiKey || verifyAccess(accessPassword)) 
+                      ? "border-green-500/30 bg-green-900/30 text-green-300" 
+                      : "border-slate-500/30 bg-slate-900/30 text-slate-400"
+                  }`}>
+                    {(userApiKey || verifyAccess(accessPassword)) ? "Đã kết nối AI" : "Chưa kết nối"}
                   </div>
                 </div>
                 

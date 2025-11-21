@@ -7,6 +7,8 @@ interface SettingsModalProps {
   onClose: () => void;
   accessPassword: string;
   setAccessPassword: (val: string) => void;
+  userApiKey: string;
+  setUserApiKey: (val: string) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -14,19 +16,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   accessPassword,
   setAccessPassword,
+  userApiKey,
+  setUserApiKey
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [localPass, setLocalPass] = useState(accessPassword);
+  const [localApiKey, setLocalApiKey] = useState(userApiKey);
 
   // Sync internal state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
       setLocalPass(accessPassword);
+      setLocalApiKey(userApiKey);
     }
-  }, [isOpen, accessPassword]);
+  }, [isOpen, accessPassword, userApiKey]);
 
   const handleSave = () => {
     setAccessPassword(localPass);
+    setUserApiKey(localApiKey);
     onClose();
   };
 
@@ -39,7 +46,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-900/50">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <SparklesIcon className="w-5 h-5 text-indigo-400" />
-            Cấu hình AI
+            Cấu hình AI (F5 để xóa)
           </h3>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-lg">
             <XMarkIcon className="w-6 h-6" />
@@ -47,17 +54,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Password Input */}
-          <div className="space-y-2">
+          {/* Option 1: Internal Password */}
+          <div className="space-y-2 pb-4 border-b border-slate-700">
             <label className="block text-sm font-medium text-slate-300">
-              Mã truy cập đặc biệt
+              Cách 1: Mã truy cập đặc biệt (Nội bộ)
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={localPass}
                 onChange={(e) => setLocalPass(e.target.value)}
-                placeholder="Nhập mã bảo mật..."
+                placeholder="Nhập mã nội bộ..."
                 className="w-full p-3 pr-10 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
               />
               <button
@@ -69,7 +76,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              Nhập mã nội bộ để kích hoạt các tính năng nâng cao (AI).
+              Dành cho nhân viên nội bộ (Sử dụng API Key của hệ thống).
+            </p>
+          </div>
+
+          {/* Option 2: Personal API Key */}
+           <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-300">
+              Cách 2: API Key cá nhân (Google Gemini)
+            </label>
+            <input
+              type="text"
+              value={localApiKey}
+              onChange={(e) => setLocalApiKey(e.target.value)}
+              placeholder="AIzaSy..."
+              className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors font-mono text-sm"
+            />
+            <p className="text-xs text-slate-500">
+              Nhập Key của riêng bạn. Nếu nhập ô này, hệ thống sẽ ưu tiên dùng Key của bạn thay vì mã nội bộ.
             </p>
           </div>
         </div>
