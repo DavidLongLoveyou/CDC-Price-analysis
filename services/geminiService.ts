@@ -45,8 +45,18 @@ export const findProductSynonyms = async (productName: string, apiKey: string): 
 
     const synonyms = JSON.parse(jsonText);
     return Array.isArray(synonyms) ? synonyms : [];
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    throw new Error("Lỗi khi gọi AI: Vui lòng kiểm tra lại API Key hoặc Mật khẩu truy cập.");
+  } catch (error: any) {
+    console.error("Gemini API Error details:", error);
+    
+    // Xử lý các mã lỗi cụ thể để báo cho người dùng dễ hiểu
+    if (error.toString().includes("403") || (error.error && error.error.code === 403)) {
+         throw new Error("API Key không hợp lệ hoặc đã bị Google chặn (Lỗi 403). Vui lòng sử dụng Key cá nhân mới.");
+    }
+    
+    if (error.toString().includes("429")) {
+        throw new Error("Hệ thống đang quá tải (Lỗi 429). Vui lòng thử lại sau vài phút.");
+    }
+
+    throw new Error("Lỗi kết nối AI. Vui lòng kiểm tra lại Internet hoặc API Key.");
   }
 };

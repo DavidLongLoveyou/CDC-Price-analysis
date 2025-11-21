@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
   <head>
@@ -33,9 +34,10 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          // Sử dụng đường dẫn tương đối './sw.js' để tránh lỗi 404 khi deploy ở sub-path
+          navigator.serviceWorker.register('./sw.js')
             .then((registration) => {
-              console.log('ServiceWorker registration successful');
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
             })
             .catch((err) => {
               console.log('ServiceWorker registration failed: ', err);
