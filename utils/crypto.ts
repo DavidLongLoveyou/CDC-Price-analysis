@@ -15,8 +15,7 @@ export const verifyAccess = (inputPass: string): string | null => {
         
         if (check === _h) {
             // Nếu Hash khớp với "mpi.huy"
-            // Trả về API Key từ biến môi trường hệ thống (Environment Variable)
-            // Điều này đảm bảo Key không bao giờ bị lộ trong mã nguồn (Source Code)
+            // Return API Key from process.env as per guidelines
             return process.env.API_KEY || null;
         }
     } catch (e) {

@@ -2,15 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Gemini AI dynamically
-export const findProductSynonyms = async (productName: string, apiKey: string): Promise<string[]> => {
-  if (!apiKey) {
-    throw new Error("Chưa cấu hình API Key. Vui lòng vào Cài đặt (biểu tượng bánh răng) để nhập Pass hoặc Key.");
-  }
+export const findProductSynonyms = async (productName: string): Promise<string[]> => {
+  // The API key must be obtained exclusively from the environment variable process.env.API_KEY
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   if (!productName.trim()) return [];
-
-  // Create a new instance per request with the provided key
-  const ai = new GoogleGenAI({ apiKey: apiKey });
 
   const prompt = `
     Bạn là một chuyên gia về dược phẩm và thiết bị y tế trong đấu thầu tại Việt Nam.
@@ -50,13 +46,13 @@ export const findProductSynonyms = async (productName: string, apiKey: string): 
     
     // Xử lý các mã lỗi cụ thể để báo cho người dùng dễ hiểu
     if (error.toString().includes("403") || (error.error && error.error.code === 403)) {
-         throw new Error("API Key không hợp lệ hoặc đã bị Google chặn (Lỗi 403). Vui lòng sử dụng Key cá nhân mới.");
+         throw new Error("API Key không hợp lệ hoặc đã bị Google chặn (Lỗi 403). Vui lòng liên hệ quản trị viên.");
     }
     
     if (error.toString().includes("429")) {
         throw new Error("Hệ thống đang quá tải (Lỗi 429). Vui lòng thử lại sau vài phút.");
     }
 
-    throw new Error("Lỗi kết nối AI. Vui lòng kiểm tra lại Internet hoặc API Key.");
+    throw new Error("Lỗi kết nối AI. Vui lòng kiểm tra lại Internet hoặc thử lại sau.");
   }
 };

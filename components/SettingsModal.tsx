@@ -7,8 +7,6 @@ interface SettingsModalProps {
   onClose: () => void;
   accessPassword: string;
   setAccessPassword: (val: string) => void;
-  userApiKey: string;
-  setUserApiKey: (val: string) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -16,25 +14,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   accessPassword,
   setAccessPassword,
-  userApiKey,
-  setUserApiKey
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showKey, setShowKey] = useState(false);
   const [localPass, setLocalPass] = useState(accessPassword);
-  const [localKey, setLocalKey] = useState(userApiKey);
 
   // Sync internal state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
       setLocalPass(accessPassword);
-      setLocalKey(userApiKey);
     }
-  }, [isOpen, accessPassword, userApiKey]);
+  }, [isOpen, accessPassword]);
 
   const handleSave = () => {
     setAccessPassword(localPass);
-    setUserApiKey(localKey);
     onClose();
   };
 
@@ -58,7 +50,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Password Input */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-slate-300">
-              Mã truy cập đặc biệt (Ưu tiên)
+              Mã truy cập đặc biệt
             </label>
             <div className="relative">
               <input
@@ -77,39 +69,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              Nếu có mã nội bộ, hãy nhập vào đây để kích hoạt tính năng AI.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-center gap-4">
-            <div className="h-px bg-slate-700 flex-1"></div>
-            <span className="text-xs text-slate-500 font-medium uppercase">Hoặc</span>
-            <div className="h-px bg-slate-700 flex-1"></div>
-          </div>
-
-          {/* User API Key Input */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-300">
-              API Key cá nhân (Gemini)
-            </label>
-            <div className="relative">
-              <input
-                type={showKey ? "text" : "password"}
-                value={localKey}
-                onChange={(e) => setLocalKey(e.target.value)}
-                placeholder="Nhập API Key của bạn nếu không có mã..."
-                className="w-full p-3 pr-10 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-              >
-                {showKey ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-              </button>
-            </div>
-            <p className="text-xs text-slate-500">
-              Lấy key tại <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">aistudio.google.com</a>
+              Nhập mã nội bộ để kích hoạt các tính năng nâng cao (AI).
             </p>
           </div>
         </div>

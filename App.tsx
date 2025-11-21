@@ -22,7 +22,6 @@ const App: React.FC = () => {
 
   // Security & Settings State
   const [accessPassword, setAccessPassword] = useState<string>(() => localStorage.getItem('data_analyst_pass') || '');
-  const [userApiKey, setUserApiKey] = useState<string>(() => localStorage.getItem('data_analyst_key') || '');
 
   // AI Search States
   const [productSearchTerm, setProductSearchTerm] = useState<string>('');
@@ -33,10 +32,6 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('data_analyst_pass', accessPassword);
   }, [accessPassword]);
-
-  useEffect(() => {
-    localStorage.setItem('data_analyst_key', userApiKey);
-  }, [userApiKey]);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -89,19 +84,17 @@ const App: React.FC = () => {
       setAiError(null);
       setSynonymResults([]);
 
-      // Determine which key to use
-      // 1. Check if accessPassword unlocks the internal key
-      const internalKey = verifyAccess(accessPassword);
-      // 2. If unlocked, use internal key. Otherwise use user provided key.
-      const effectiveKey = internalKey || userApiKey;
+      // Check if accessPassword unlocks the feature
+      const isUnlocked = verifyAccess(accessPassword);
 
-      if (!effectiveKey) {
-          setAiError('Vui lòng nhập Mật khẩu truy cập hoặc API Key trong mục Cài đặt (Bánh răng).');
+      if (!isUnlocked) {
+          setAiError('Vui lòng nhập Mật khẩu truy cập trong mục Cài đặt (Bánh răng) để sử dụng tính năng AI.');
+          setIsAiLoading(false);
           return;
       }
 
       try {
-          const synonyms = await findProductSynonyms(productSearchTerm, effectiveKey);
+          const synonyms = await findProductSynonyms(productSearchTerm);
           setSynonymResults(synonyms);
           if (synonyms.length === 0) {
               setAiError('Không tìm thấy kết quả tương tự nào.');
@@ -197,8 +190,6 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
         onClose={() => setIsSettingsOpen(false)}
         accessPassword={accessPassword}
         setAccessPassword={setAccessPassword}
-        userApiKey={userApiKey}
-        setUserApiKey={setUserApiKey}
       />
       
       <div className="max-w-7xl mx-auto">
@@ -216,7 +207,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-full border border-slate-600 transition-all shadow-sm text-sm font-bold"
-            title="Cấu hình API"
+            title="Cấu hình"
           >
             <Cog6ToothIcon className="w-5 h-5" />
           </button>
@@ -278,7 +269,7 @@ ${analysisResult.histogram.map(item => `${item.name.padEnd(15)}: ${item.count}`)
                   
                   {/* Quick status indicator */}
                   <div className="text-xs px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-900/30 text-indigo-300">
-                    {verifyAccess(accessPassword) ? "Đã mở khóa Pro" : (userApiKey ? "Dùng Key cá nhân" : "Chưa cấu hình")}
+                    {verifyAccess(accessPassword) ? "Đã mở khóa Pro" : "Chưa kích hoạt"}
                   </div>
                 </div>
                 
